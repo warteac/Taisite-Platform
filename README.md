@@ -88,7 +88,7 @@
 ##### 2.3 安装 python 依赖包
 
     pip install tensorflow==1.11  -i https://pypi.tuna.tsinghua.edu.cn/simple
-    pip install bert-serving-server==1.9.2 -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install bert-serving-server==1.9.1 -i https://pypi.tuna.tsinghua.edu.cn/simple
     
 ##### 2.4 启动模型
     
@@ -98,6 +98,22 @@
 启动成功后输出如下：
 
 ![NLP模型启动成功输出](https://github.com/amazingTest/Taisite-Platform/blob/master/images/NLP模型启动成功输出.png)
+
+**注意事项：** 有很多小伙伴反应在配置较低（2G 1核）的服务器中会无法成功启动这个模型、导致启动项目时报连接超时的错误。
+
+**解决方案：** 取消项目对模型的依赖（副作用: 平台丧失了所有智能相关的功能）
+
+**解决步骤：**
+
+1.删除 ./backend/app/__init__.py 中的这段代码：
+
+![不使用NLP模型方法指南1](https://github.com/amazingTest/Taisite-Platform/blob/master/images/不使用NLP模型方法指南1.png)
+
+2.将 ./backend/testframe/interfaceTest/tester.py 中的下列代码修改成 **pass**：
+
+![不使用NLP模型方法指南2](https://github.com/amazingTest/Taisite-Platform/blob/master/images/不使用NLP模型方法指南2.png)
+
+完成后在启动项目时，就不会依赖于自然语言模型了~
 
 ***
 
@@ -110,7 +126,7 @@
 #### 4. 设置系统环境变量
     
     AUTOTEST_PLATFORM_ENV=production
-    AUTOTEST_PLATFORM_NLP_SERVER=127.0.0.1
+    AUTOTEST_PLATFORM_NLP_SERVER_HOST=127.0.0.1
     AUTOTEST_PLATFORM_MONGO_HOST=${MONGO_HOST}
     AUTOTEST_PLATFORM_MONGO_PORT=${MONGO_PORT}
     AUTOTEST_PLATFORM_MONGO_USERNAME=${USERNAME}
@@ -123,7 +139,7 @@
 
 **AUTOTEST_PLATFORM_MONGO_USERNAME** 和 **AUTOTEST_PLATFORM_MONGO_PASSWORD** 分别表示数据库的帐号密码（若无可不填）
 
-**AUTOTEST_PLATFORM_NLP_SERVER**（自然语言模型服务）默认为本机启动 （非必填）
+**AUTOTEST_PLATFORM_NLP_SERVER_HOST**（自然语言模型服务）默认为本机启动 （非必填）
 
 **AUTOTEST_PLATFORM_MONGO_DEFAULT_DBNAME** 为默认的数据表名（必填）
 
@@ -192,6 +208,23 @@
 	docker pull shaoyuyishiwo/bertserver
 	docker run --name autotest-platform-bertserver -d shaoyuyishiwo/bertserver 
 	
+	
+**注意事项：** 有很多小伙伴反应在配置较低（2G 1核）的服务器中会无法成功启动这个模型、导致启动项目时报连接超时的错误。
+
+**解决方案：** 取消项目对模型的依赖（副作用: 平台丧失了所有智能相关的功能）
+
+**解决步骤：**
+
+1.删除 ./backend/app/__init__.py 中的这段代码：
+
+![不使用NLP模型方法指南1](https://github.com/amazingTest/Taisite-Platform/blob/master/images/不使用NLP模型方法指南1.png)
+
+2.将 ./backend/testframe/interfaceTest/tester.py 中的下列代码修改成 **pass**：
+
+![不使用NLP模型方法指南2](https://github.com/amazingTest/Taisite-Platform/blob/master/images/不使用NLP模型方法指南2.png)
+
+完成后在启动项目时，就不会依赖于自然语言模型了~
+
 ***
 
 #### 2. Mongo 数据库部署 (若已有现成数据库可用则可跳过此步)
@@ -233,7 +266,8 @@
   若出现警告则选择 (E)dit anyway (输入 E)
   
   ##### 3.1 文本末端插入下列数据 (输入 i 则变为 insert 状态)
-  
+    
+    export AUTOTEST_PLATFORM_ENV=production
     export AUTOTEST_PLATFORM_NLP_HOST=${BERT_IPADRESS}
     export AUTOTEST_PLATFORM_MONGO_HOST=${MONGO_HOST}
     export AUTOTEST_PLATFORM_MONGO_PORT=${MONGO_PORT}
