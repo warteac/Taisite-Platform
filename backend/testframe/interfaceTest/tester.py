@@ -4,9 +4,12 @@ import time
 import datetime
 import re
 from utils import common
-
+import ast
 from bson import ObjectId
 from threading import Thread
+
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def async_test(f):
@@ -147,11 +150,17 @@ class tester:
                     url += '%s=%s&' % (key, value)
             url = url[0:(len(url) - 1)]
         elif 'presendParams' in test_case and isinstance(test_case['presendParams'], dict):
-
-            for key, value in test_case['presendParams'].items():
-                test_case['presendParams'][key] = \
-                    common.resolve_global_var(pre_resolve_var=value, global_var_dic=self.global_vars) \
-                        if isinstance(value, str) else test_case['presendParams'][key]
+            
+            # dict 先转 str，方便全局变量替换
+            test_case['presendParams'] = str(test_case['presendParams'])
+            
+            # 全局替换
+            test_case['presendParams'] = common.resolve_global_var(pre_resolve_var=test_case['presendParams'],
+                                                                   global_var_dic=self.global_vars)
+            
+            # 转回 dict
+            test_case['presendParams'] = ast.literal_eval(test_case['presendParams'])
+            
             json_data = test_case['presendParams']
 
         if 'headers' in test_case and not test_case['headers'] in ["", None, {}, {'': ''}]:
@@ -177,8 +186,13 @@ class tester:
             test_case['cookies'].append(cookie_dic)
 
         try:
-            response = session.request(url=url, method=method, json=json_data,
-                                       headers=headers)
+
+            use_json_data = len(list(filter(lambda x: str(x).lower() == 'content-type' and 'json'
+                                                      in headers[x], headers.keys() if headers else {}))) > 0
+
+            response = session.request(url=url, method=method, json=json_data, headers=headers, verify=False) if use_json_data\
+                else session.request(url=url, method=method, data=json_data, headers=headers, verify=False)
+
         except BaseException as e:
            returned_data["status"] = 'failed'
            returned_data["testConclusion"].append('请求失败, 错误信息: <%s> ' % e)
@@ -327,7 +341,7 @@ class tester:
                 returned_data["status"] = 'failed'
                 returned_data["testConclusion"].append('判断数值时报错, 错误信息: <%s>。\t ' % e)
 
-        if self.nlper and check_response_similarity:
+        if hasattr(self, 'nlper') and self.nlper and check_response_similarity:
             try:
                 for crs in check_response_similarity:
                     base_text = crs['baseText']
